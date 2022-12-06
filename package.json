@@ -1,0 +1,16 @@
+{
+    "name": "advent-of-code-2022",
+    "version": "1.0.0",
+    "description": "Advent of Code 2022",
+    "author": "Jean LECORDIER",
+    "license": "ISC",
+    "type": "module",
+    "scripts": {
+        "test": "vitest"
+    },
+    "devDependencies": {
+        "typescript": "^4.7.4",
+        "vitest": "^0.25.2"
+    },
+    "dependencies": {}
+}
