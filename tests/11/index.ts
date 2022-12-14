@@ -179,7 +179,7 @@ export class MonkeyInTheMiddle {
     monkeys: Monkey[] = [];
     shouldRelieveWorry: boolean;
     rounds: number;
-    divisors: number[] = [];
+    combinedDivisor: number = 1;
 
     constructor(shouldRelieveWorry: boolean, rounds: number) {
         this.shouldRelieveWorry = shouldRelieveWorry;
@@ -220,8 +220,7 @@ export class MonkeyInTheMiddle {
     }
 
     addDivisor(divisor: number): void {
-        this.divisors.push(divisor);
-        this.divisors.sort((a, b) => b - a);
+        this.combinedDivisor *= divisor;
     }
 
     parseMonkeysLines(monkeysLines: string[]): void {
@@ -238,7 +237,7 @@ export class MonkeyInTheMiddle {
     }
 
     simplify(n: number): number {
-        return simplify(n, this.divisors);
+        return n % this.combinedDivisor;
     }
 
     simplifyItem(item: Item): void {

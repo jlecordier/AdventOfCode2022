@@ -354,9 +354,9 @@ describe(`Day 11`, () => {
                         rounds
                     );
                     monkeyInTheMiddle.parseInput(EXAMPLE_INPUT);
-                    expect(monkeyInTheMiddle.divisors).toEqual([
-                        23, 19, 17, 13,
-                    ]);
+                    expect(monkeyInTheMiddle.combinedDivisor).toEqual(
+                        23 * 19 * 17 * 13
+                    );
                     expect(monkeyInTheMiddle.getMonkeysActivity()).toEqual([
                         0, 0, 0, 0,
                     ]);
@@ -855,7 +855,7 @@ describe(`Day 11`, () => {
                     ]);
                 });
             });
-            describe.skip(`when executing 10000 round`, () => {
+            describe(`when executing 10000 round`, () => {
                 const rounds = 10000;
                 it(`should get monkeys activity`, () => {
                     const monkeyInTheMiddle = new MonkeyInTheMiddle(
