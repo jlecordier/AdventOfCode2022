@@ -29,7 +29,8 @@ export class Position {
 export class Elevation {
     height: number;
     position: Position;
-    isADeadEnd: boolean = false;
+    distanceToStart: number = Number.POSITIVE_INFINITY;
+    hasBeenVisited: boolean = false;
 
     constructor(height: number, position: Position) {
         this.height = height;
@@ -116,175 +117,107 @@ export class Grid {
     }
 
     getSmallestAmountOfSteps(): number {
-        const solver = new PathSolver(this, [this.start]);
-        return solver.solve();
+        const solver = new PathSolver(this);
+        return solver.solve(this.start);
     }
 }
 
 export class PathSolver {
     grid: Grid;
-    path: Elevation[];
+    unvisited = new Set<Elevation>();
 
-    constructor(grid: Grid, path: Elevation[]) {
+    constructor(grid: Grid) {
         this.grid = grid;
-        this.path = path;
+        this.grid.grid.forEach(row => {
+            row.forEach(e => {
+                this.unvisited.add(e);
+            });
+        });
     }
 
-    get current(): Elevation {
-        return this.path[this.path.length - 1];
-    }
-
-    getAbove(): Elevation | undefined {
+    getAbove(elevation: Elevation): Elevation | undefined {
         return this.grid.getElevationAt(
-            this.current.position.x,
-            this.current.position.y - 1
+            elevation.position.x,
+            elevation.position.y - 1
         );
     }
 
-    getBelow(): Elevation | undefined {
+    getBelow(elevation: Elevation): Elevation | undefined {
         return this.grid.getElevationAt(
-            this.current.position.x,
-            this.current.position.y + 1
+            elevation.position.x,
+            elevation.position.y + 1
         );
     }
 
-    getLeft(): Elevation | undefined {
+    getLeft(elevation: Elevation): Elevation | undefined {
         return this.grid.getElevationAt(
-            this.current.position.x - 1,
-            this.current.position.y
+            elevation.position.x - 1,
+            elevation.position.y
         );
     }
 
-    getRight(): Elevation | undefined {
+    getRight(elevation: Elevation): Elevation | undefined {
         return this.grid.getElevationAt(
-            this.current.position.x + 1,
-            this.current.position.y
+            elevation.position.x + 1,
+            elevation.position.y
         );
     }
 
-    hasAlreadyVisited(elevation: Elevation): boolean {
-        return this.path.some(e => e.equals(elevation));
+    canVisit(from: Elevation, to: Elevation): boolean {
+        return !to.hasBeenVisited && to.isAccessibleFrom(from);
     }
 
-    canVisit(elevation: Elevation): boolean {
-        return (
-            !this.hasAlreadyVisited(elevation) &&
-            elevation.isAccessibleFrom(this.current) &&
-            !elevation.isADeadEnd
-        );
-    }
-
-    getDeltaToEnd(): Position {
-        return new Position(
-            this.grid.end.position.x - this.current.position.x,
-            this.grid.end.position.y - this.current.position.y
-        );
-    }
-
-    getOrderedNeighbourgs(): (Elevation | undefined)[] {
-        const delta = this.getDeltaToEnd();
-        const isUpLeft = delta.x < 0 && delta.y < 0;
-        if (isUpLeft) {
-            return [
-                this.getAbove(),
-                this.getLeft(),
-                this.getBelow(),
-                this.getRight(),
-            ];
-        }
-        const isUp = delta.x === 0 && delta.y < 0;
-        if (isUp) {
-            return [
-                this.getAbove(),
-                this.getLeft(),
-                this.getRight(),
-                this.getBelow(),
-            ];
-        }
-        const isUpRight = delta.x > 0 && delta.y < 0;
-        if (isUpRight) {
-            return [
-                this.getAbove(),
-                this.getRight(),
-                this.getBelow(),
-                this.getLeft(),
-            ];
-        }
-        const isRight = delta.x > 0 && delta.y === 0;
-        if (isRight) {
-            return [
-                this.getRight(),
-                this.getAbove(),
-                this.getBelow(),
-                this.getLeft(),
-            ];
-        }
-        const isRightDown = delta.x > 0 && delta.y > 0;
-        if (isRightDown) {
-            return [
-                this.getRight(),
-                this.getBelow(),
-                this.getLeft(),
-                this.getAbove(),
-            ];
-        }
-        const isDown = delta.x === 0 && delta.y > 0;
-        if (isDown) {
-            return [
-                this.getBelow(),
-                this.getLeft(),
-                this.getRight(),
-                this.getAbove(),
-            ];
-        }
-        const isDownLeft = delta.x < 0 && delta.y > 0;
-        if (isDownLeft) {
-            return [
-                this.getBelow(),
-                this.getLeft(),
-                this.getAbove(),
-                this.getRight(),
-            ];
-        }
-        const isLeft = delta.x < 0 && delta.y === 0;
-        if (isLeft) {
-            return [
-                this.getLeft(),
-                this.getAbove(),
-                this.getBelow(),
-                this.getRight(),
-            ];
-        }
+    getVisitableNeighbourgs(elevation: Elevation): Elevation[] {
         return [
-            this.getLeft(),
-            this.getAbove(),
-            this.getBelow(),
-            this.getRight(),
-        ];
-    }
-
-    getVisitableNeighbourgs(): Elevation[] {
-        return this.getOrderedNeighbourgs()
+            this.getAbove(elevation),
+            this.getBelow(elevation),
+            this.getLeft(elevation),
+            this.getRight(elevation),
+        ]
             .filter((e): e is Elevation => e !== undefined)
-            .filter(e => this.canVisit(e));
+            .filter(e => this.canVisit(elevation, e));
     }
 
-    solve(): number {
-        if (this.current.equals(this.grid.end)) {
-            this.debug();
-            return this.path.length - 1;
+    getNextElevation(): Elevation | undefined {
+        if (this.unvisited.size === 0) {
+            return undefined;
         }
-        const neighbourgs = this.getVisitableNeighbourgs();
-        if (neighbourgs.length === 0) {
-            this.current.isADeadEnd = true;
-            return Infinity;
+        let closest!: Elevation;
+        this.unvisited.forEach(e => {
+            if (
+                closest === undefined ||
+                e.distanceToStart < closest.distanceToStart
+            ) {
+                closest = e;
+            }
+        });
+        return closest;
+    }
+
+    solveRecursive(elevation: Elevation): number {
+        this.debug();
+        elevation.hasBeenVisited = true;
+        this.unvisited.delete(elevation);
+        const neighbourgs = this.getVisitableNeighbourgs(elevation);
+        for (const n of neighbourgs) {
+            n.distanceToStart = Math.min(
+                n.distanceToStart,
+                elevation.distanceToStart + 1
+            );
+            if (n === this.grid.end) {
+                return n.distanceToStart;
+            }
         }
-        return Math.min(
-            ...neighbourgs.map(e => {
-                const solver = new PathSolver(this.grid, [...this.path, e]);
-                return solver.solve();
-            })
-        );
+        const next = this.getNextElevation();
+        if (!next) {
+            return Number.POSITIVE_INFINITY;
+        }
+        return this.solveRecursive(next);
+    }
+
+    solve(start: Elevation): number {
+        start.distanceToStart = 0;
+        return this.solveRecursive(start);
     }
 
     debug(): void {
@@ -295,10 +228,8 @@ export class PathSolver {
                     debug += `S`;
                 } else if (elevation.equals(this.grid.end)) {
                     debug += `E`;
-                } else if (elevation.isADeadEnd) {
-                    debug += `x`;
-                } else if (this.hasAlreadyVisited(elevation)) {
-                    debug += `o`;
+                } else if (elevation.hasBeenVisited) {
+                    debug += `.`;
                 } else {
                     debug += String.fromCharCode(elevation.height);
                 }

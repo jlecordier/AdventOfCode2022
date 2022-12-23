@@ -99,75 +99,23 @@ describe(`Day 11`, () => {
         describe(`given a path solver`, () => {
             it(`should get the correct neighbourg`, () => {
                 const grid = Grid.parse(EXAMPLE_INPUT);
-                const pathSolver = new PathSolver(grid, [grid.start]);
-                expect(pathSolver.getAbove()).toBeUndefined();
-                expect(pathSolver.getLeft()).toBeUndefined();
+                const pathSolver = new PathSolver(grid);
+                expect(pathSolver.getAbove(grid.start)).toBeUndefined();
+                expect(pathSolver.getLeft(grid.start)).toBeUndefined();
                 expect(
                     pathSolver
-                        .getBelow()
+                        .getBelow(grid.start)
                         ?.equals(
                             new Elevation(`a`.charCodeAt(0), new Position(0, 1))
                         )
                 ).toBeTruthy();
                 expect(
                     pathSolver
-                        .getRight()
+                        .getRight(grid.start)
                         ?.equals(
                             new Elevation(`a`.charCodeAt(0), new Position(1, 0))
                         )
                 ).toBeTruthy();
-            });
-            describe(`when testing a non visited elevation`, () => {
-                it(`should not have already visited`, () => {
-                    const grid = Grid.parse(EXAMPLE_INPUT);
-                    const pathSolver = new PathSolver(grid, [grid.start]);
-                    const below = pathSolver.getBelow()!;
-                    expect(pathSolver.hasAlreadyVisited(below)).toBeFalsy();
-                });
-                it(`should return true`, () => {
-                    const grid = Grid.parse(EXAMPLE_INPUT);
-                    const pathSolver = new PathSolver(grid, [grid.start]);
-                    const below = pathSolver.getBelow()!;
-                    expect(pathSolver.canVisit(below)).toBeTruthy();
-                });
-            });
-            describe(`when testing an already visited elevation`, () => {
-                it(`should have already visited`, () => {
-                    const grid = Grid.parse(EXAMPLE_INPUT);
-                    const pathSolver = new PathSolver(grid, [grid.start]);
-                    const below = pathSolver.getBelow()!;
-                    const pathSolverBelow = new PathSolver(grid, [
-                        ...pathSolver.path,
-                        below,
-                    ]);
-                    expect(
-                        pathSolverBelow.hasAlreadyVisited(grid.start)
-                    ).toBeTruthy();
-                });
-                it(`should return false`, () => {
-                    const grid = Grid.parse(EXAMPLE_INPUT);
-                    const pathSolver = new PathSolver(grid, [grid.start]);
-                    const below = pathSolver.getBelow()!;
-                    const pathSolverBelow = new PathSolver(grid, [
-                        ...pathSolver.path,
-                        below,
-                    ]);
-                    expect(pathSolverBelow.canVisit(grid.start)).toBeFalsy();
-                });
-            });
-            describe(`when testing a too high elevation`, () => {
-                it(`should return false`, () => {
-                    const grid = Grid.parse(EXAMPLE_INPUT);
-                    const right1 = grid.getElevationAt(1, 0)!;
-                    const right2 = grid.getElevationAt(2, 0)!;
-                    const pathSolver = new PathSolver(grid, [
-                        grid.start,
-                        right1,
-                        right2,
-                    ]);
-                    const right3 = pathSolver.getRight()!;
-                    expect(pathSolver.canVisit(right3)).toBeFalsy();
-                });
             });
         });
 
@@ -200,20 +148,6 @@ aE`;
                         new Elevation(`z`.charCodeAt(0), new Position(1, 1))
                     )
                 ).toBeTruthy();
-            });
-            describe(`when given a solved path`, () => {
-                it(`should return the path length`, () => {
-                    const grid = Grid.parse(EXAMPLE_INPUT);
-                    const right1 = grid.getElevationAt(1, 0)!;
-                    const right2 = grid.getElevationAt(2, 0)!;
-                    const pathSolver = new PathSolver(grid, [
-                        grid.start,
-                        right1,
-                        right2,
-                    ]);
-                    const right3 = pathSolver.getRight()!;
-                    expect(pathSolver.canVisit(right3)).toBeFalsy();
-                });
             });
         });
 
