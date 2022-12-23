@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
     Elevation,
-    getSmallestAmountOfSteps,
+    getSmallestAmountOfStepsForPartOne,
+    getSmallestAmountOfStepsForPartTwo,
     Grid,
     PathSolver,
     Position,
@@ -100,18 +101,18 @@ describe(`Day 11`, () => {
             it(`should get the correct neighbourg`, () => {
                 const grid = Grid.parse(EXAMPLE_INPUT);
                 const pathSolver = new PathSolver(grid);
-                expect(pathSolver.getAbove(grid.start)).toBeUndefined();
-                expect(pathSolver.getLeft(grid.start)).toBeUndefined();
+                expect(pathSolver.getAbove(grid.starts[0])).toBeUndefined();
+                expect(pathSolver.getLeft(grid.starts[0])).toBeUndefined();
                 expect(
                     pathSolver
-                        .getBelow(grid.start)
+                        .getBelow(grid.starts[0])
                         ?.equals(
                             new Elevation(`a`.charCodeAt(0), new Position(0, 1))
                         )
                 ).toBeTruthy();
                 expect(
                     pathSolver
-                        .getRight(grid.start)
+                        .getRight(grid.starts[0])
                         ?.equals(
                             new Elevation(`a`.charCodeAt(0), new Position(1, 0))
                         )
@@ -125,7 +126,7 @@ aE`;
             it(`should parse the grid`, () => {
                 const grid = Grid.parse(input);
                 expect(
-                    grid.start.equals(
+                    grid.starts[0].equals(
                         new Elevation(`a`.charCodeAt(0), new Position(0, 0))
                     )
                 ).toBeTruthy();
@@ -153,7 +154,19 @@ aE`;
 
         describe(`given a text input`, () => {
             it(`should return the smallest amount of steps`, () => {
-                expect(getSmallestAmountOfSteps(EXAMPLE_INPUT)).toEqual(31);
+                expect(
+                    getSmallestAmountOfStepsForPartOne(EXAMPLE_INPUT)
+                ).toEqual(31);
+            });
+        });
+    });
+
+    describe(`-- Part Two --`, () => {
+        describe(`given a text input`, () => {
+            it(`should return the smallest amount of steps`, () => {
+                expect(
+                    getSmallestAmountOfStepsForPartTwo(EXAMPLE_INPUT)
+                ).toEqual(29);
             });
         });
     });

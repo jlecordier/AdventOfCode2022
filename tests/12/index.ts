@@ -55,18 +55,18 @@ export class Elevation {
 }
 
 export class Grid {
-    start!: Elevation;
+    starts: Elevation[] = [];
     end!: Elevation;
     grid: Elevation[][] = [];
 
-    constructor(start: Elevation, end: Elevation, grid: Elevation[][] = []) {
-        this.start = start;
+    constructor(starts: Elevation[], end: Elevation, grid: Elevation[][] = []) {
+        this.starts = starts;
         this.end = end;
         this.grid = grid;
     }
 
-    static parse(input: string): Grid {
-        let start!: Elevation;
+    static parse(input: string, multipleStart = false): Grid {
+        let starts: Elevation[] = [];
         let end!: Elevation;
         const grid: Elevation[][] = [];
         const lines = input.split('\n');
@@ -76,9 +76,9 @@ export class Grid {
             points.forEach((p, x) => {
                 const position = new Position(x, y);
                 let elevation: Elevation;
-                if (p === `S`) {
+                if (p === `S` || (multipleStart && p === `a`)) {
                     elevation = Elevation.parse(`a`, position);
-                    start = elevation;
+                    starts.push(elevation);
                 } else if (p === `E`) {
                     elevation = Elevation.parse(`z`, position);
                     end = elevation;
@@ -89,7 +89,7 @@ export class Grid {
             });
             grid.push(row);
         });
-        return new Grid(start, end, grid);
+        return new Grid(starts, end, grid);
     }
 
     getHeight(): number {
@@ -116,23 +116,35 @@ export class Grid {
         return this.getElevationAt(position.x, position.y);
     }
 
+    getElevations(): Elevation[] {
+        return this.grid.flat();
+    }
+
+    resetVisited(): void {
+        this.grid.forEach(row => {
+            row.forEach(e => {
+                e.hasBeenVisited = false;
+            });
+        });
+    }
+
     getSmallestAmountOfSteps(): number {
         const solver = new PathSolver(this);
-        return solver.solve(this.start);
+        return Math.min(...this.starts.map(start => solver.solve(start)));
     }
 }
 
 export class PathSolver {
     grid: Grid;
-    unvisited = new Set<Elevation>();
+    unvisited!: Set<Elevation>;
 
     constructor(grid: Grid) {
         this.grid = grid;
-        this.grid.grid.forEach(row => {
-            row.forEach(e => {
-                this.unvisited.add(e);
-            });
-        });
+    }
+
+    initUnvisited(): void {
+        this.grid.resetVisited();
+        this.unvisited = new Set(this.grid.getElevations());
     }
 
     getAbove(elevation: Elevation): Elevation | undefined {
@@ -195,7 +207,7 @@ export class PathSolver {
     }
 
     solveRecursive(elevation: Elevation): number {
-        this.debug();
+        // this.debug();
         elevation.hasBeenVisited = true;
         this.unvisited.delete(elevation);
         const neighbourgs = this.getVisitableNeighbourgs(elevation);
@@ -217,6 +229,7 @@ export class PathSolver {
 
     solve(start: Elevation): number {
         start.distanceToStart = 0;
+        this.initUnvisited();
         return this.solveRecursive(start);
     }
 
@@ -224,7 +237,7 @@ export class PathSolver {
         let debug = ``;
         this.grid.grid.forEach(row => {
             row.forEach(elevation => {
-                if (elevation.equals(this.grid.start)) {
+                if (this.grid.starts.some(start => elevation.equals(start))) {
                     debug += `S`;
                 } else if (elevation.equals(this.grid.end)) {
                     debug += `E`;
@@ -240,13 +253,18 @@ export class PathSolver {
     }
 }
 
-export function getSmallestAmountOfSteps(input: string): number {
+export function getSmallestAmountOfStepsForPartOne(input: string): number {
     const grid = Grid.parse(input);
     return grid.getSmallestAmountOfSteps();
 }
 
+export function getSmallestAmountOfStepsForPartTwo(input: string): number {
+    const grid = Grid.parse(input, true);
+    return grid.getSmallestAmountOfSteps();
+}
+
 export function computeOutput(input: string): string {
-    const business = getSmallestAmountOfSteps(input);
+    const business = getSmallestAmountOfStepsForPartTwo(input);
     return business.toString();
 }
 
