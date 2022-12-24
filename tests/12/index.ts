@@ -55,18 +55,18 @@ export class Elevation {
 }
 
 export class Grid {
-    starts: Elevation[] = [];
-    end!: Elevation;
+    start: Elevation;
+    end: Elevation;
     grid: Elevation[][] = [];
 
-    constructor(starts: Elevation[], end: Elevation, grid: Elevation[][] = []) {
-        this.starts = starts;
+    constructor(start: Elevation, end: Elevation, grid: Elevation[][] = []) {
+        this.start = start;
         this.end = end;
         this.grid = grid;
     }
 
-    static parse(input: string, multipleStart = false): Grid {
-        let starts: Elevation[] = [];
+    static parse(input: string): Grid {
+        let start!: Elevation;
         let end!: Elevation;
         const grid: Elevation[][] = [];
         const lines = input.split('\n');
@@ -76,9 +76,9 @@ export class Grid {
             points.forEach((p, x) => {
                 const position = new Position(x, y);
                 let elevation: Elevation;
-                if (p === `S` || (multipleStart && p === `a`)) {
+                if (p === `S`) {
                     elevation = Elevation.parse(`a`, position);
-                    starts.push(elevation);
+                    start = elevation;
                 } else if (p === `E`) {
                     elevation = Elevation.parse(`z`, position);
                     end = elevation;
@@ -89,7 +89,7 @@ export class Grid {
             });
             grid.push(row);
         });
-        return new Grid(starts, end, grid);
+        return new Grid(start, end, grid);
     }
 
     getHeight(): number {
@@ -126,11 +126,6 @@ export class Grid {
                 e.hasBeenVisited = false;
             });
         });
-    }
-
-    getSmallestAmountOfSteps(): number {
-        const solver = new PathSolver(this);
-        return Math.min(...this.starts.map(start => solver.solve(start)));
     }
 }
 
@@ -206,6 +201,10 @@ export class PathSolver {
         return closest;
     }
 
+    isTheEnd(elevation: Elevation): boolean {
+        return elevation === this.grid.end;
+    }
+
     solveRecursive(elevation: Elevation): number {
         // this.debug();
         elevation.hasBeenVisited = true;
@@ -216,7 +215,7 @@ export class PathSolver {
                 n.distanceToStart,
                 elevation.distanceToStart + 1
             );
-            if (n === this.grid.end) {
+            if (this.isTheEnd(n)) {
                 return n.distanceToStart;
             }
         }
@@ -233,11 +232,15 @@ export class PathSolver {
         return this.solveRecursive(start);
     }
 
+    getSmallestAmountOfSteps(): number {
+        return this.solve(this.grid.start);
+    }
+
     debug(): void {
         let debug = ``;
         this.grid.grid.forEach(row => {
             row.forEach(elevation => {
-                if (this.grid.starts.some(start => elevation.equals(start))) {
+                if (elevation.equals(this.grid.start)) {
                     debug += `S`;
                 } else if (elevation.equals(this.grid.end)) {
                     debug += `E`;
@@ -253,14 +256,30 @@ export class PathSolver {
     }
 }
 
+export class MultiplePathSolver extends PathSolver {
+    canVisit(from: Elevation, to: Elevation): boolean {
+        return !to.hasBeenVisited && from.isAccessibleFrom(to);
+    }
+
+    isTheEnd(elevation: Elevation): boolean {
+        return elevation.height === `a`.charCodeAt(0);
+    }
+
+    getSmallestAmountOfSteps(): number {
+        return this.solve(this.grid.end);
+    }
+}
+
 export function getSmallestAmountOfStepsForPartOne(input: string): number {
     const grid = Grid.parse(input);
-    return grid.getSmallestAmountOfSteps();
+    const solver = new PathSolver(grid);
+    return solver.getSmallestAmountOfSteps();
 }
 
 export function getSmallestAmountOfStepsForPartTwo(input: string): number {
-    const grid = Grid.parse(input, true);
-    return grid.getSmallestAmountOfSteps();
+    const grid = Grid.parse(input);
+    const solver = new MultiplePathSolver(grid);
+    return solver.getSmallestAmountOfSteps();
 }
 
 export function computeOutput(input: string): string {

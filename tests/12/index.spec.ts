@@ -101,18 +101,18 @@ describe(`Day 11`, () => {
             it(`should get the correct neighbourg`, () => {
                 const grid = Grid.parse(EXAMPLE_INPUT);
                 const pathSolver = new PathSolver(grid);
-                expect(pathSolver.getAbove(grid.starts[0])).toBeUndefined();
-                expect(pathSolver.getLeft(grid.starts[0])).toBeUndefined();
+                expect(pathSolver.getAbove(grid.start)).toBeUndefined();
+                expect(pathSolver.getLeft(grid.start)).toBeUndefined();
                 expect(
                     pathSolver
-                        .getBelow(grid.starts[0])
+                        .getBelow(grid.start)
                         ?.equals(
                             new Elevation(`a`.charCodeAt(0), new Position(0, 1))
                         )
                 ).toBeTruthy();
                 expect(
                     pathSolver
-                        .getRight(grid.starts[0])
+                        .getRight(grid.start)
                         ?.equals(
                             new Elevation(`a`.charCodeAt(0), new Position(1, 0))
                         )
@@ -126,7 +126,7 @@ aE`;
             it(`should parse the grid`, () => {
                 const grid = Grid.parse(input);
                 expect(
-                    grid.starts[0].equals(
+                    grid.start.equals(
                         new Elevation(`a`.charCodeAt(0), new Position(0, 0))
                     )
                 ).toBeTruthy();
