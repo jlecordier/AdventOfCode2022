@@ -10,7 +10,7 @@
     },
     "devDependencies": {
         "typescript": "^4.7.4",
-        "vitest": "^4.1.11"
+        "vitest": "^4.1.12"
     },
     "dependencies": {}
 }
